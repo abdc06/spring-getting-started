@@ -29,20 +29,22 @@ public class FileSystemStorageService implements StorageService {
     @Override
     public void store(MultipartFile file) {
         try {
+            //타겟 파일이 비어있다면 예외처리
             if (file.isEmpty()) {
                 throw new StorageException("Failed to store empty file.");
             }
-            Path destinationFile = this.rootLocation.resolve(
-                            Paths.get(file.getOriginalFilename()))
-                    .normalize().toAbsolutePath();
+            //타겟 파일의 경로를 rootLocation 하위 경로 + 파일명으로 설정
+            Path destinationFile = this.rootLocation.resolve(Paths.get(file.getOriginalFilename()))
+                    .normalize()
+                    .toAbsolutePath();
+            // 타겟 파일의 디렉토리가 rootLocation 과 동일한지 확인하여 예외처리 (보안을 위한 점검)
             if (!destinationFile.getParent().equals(this.rootLocation.toAbsolutePath())) {
-                // This is a security check
-                throw new StorageException(
-                        "Cannot store file outside current directory.");
+                throw new StorageException("Cannot store file outside current directory.");
             }
             try (InputStream inputStream = file.getInputStream()) {
-                Files.copy(inputStream, destinationFile,
-                        StandardCopyOption.REPLACE_EXISTING);
+                // 타겟 파일(inputStream)을 목적 파일 경로(destinationFile)에 복사한다.
+                // 단, 복사하려는 경로에 파일이 이미 존재할 경우 덮어쓴다. (StandardCopyOption.REPLACE_EXISTING)
+                Files.copy(inputStream, destinationFile, StandardCopyOption.REPLACE_EXISTING);
             }
         }
         catch (IOException e) {
@@ -77,9 +79,7 @@ public class FileSystemStorageService implements StorageService {
                 return resource;
             }
             else {
-                throw new StorageFileNotFoundException(
-                        "Could not read file: " + filename);
-
+                throw new StorageFileNotFoundException("Could not read file: " + filename);
             }
         }
         catch (MalformedURLException e) {

@@ -19,6 +19,7 @@ public class UploadingFilesApplication {
     @Bean
     CommandLineRunner init(StorageService storageService) {
         return (args) -> {
+            //서버 구동 초기화 시점에 파일 디렉토리를 삭제, 생성하는 작업
             storageService.deleteAll();
             storageService.init();
         };
